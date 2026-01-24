@@ -1,0 +1,11 @@
+src/backend/SchoolERP.Api/bin
+src/backend/SchoolERP.Api/obj
+src/backend/SchoolERP.Core/bin
+src/backend/SchoolERP.Core/obj
+src/backend/SchoolERP.Infra/bin
+src/backend/SchoolERP.Infra/obj
+src/frontend/schoolerp-web/node_modules
+src/frontend/schoolerp-web/dist
+.git
+.vs
+.vscode
