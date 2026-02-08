@@ -84,7 +84,7 @@ namespace SchoolERP.Api.Controllers
             var invoice = new Invoice
             {
                 StudentId = request.StudentId,
-                InvoiceNumber = $"INV-{DateTime.UtcNow.Ticks}", // Simplified ID generation
+                InvoiceNumber = $"INV-{DateTime.UtcNow:yyMMddHHmmss}", // Shorter format: INV-260125110530 (16 chars)
                 IssueDate = DateTime.UtcNow,
                 DueDate = request.DueDate,
                 Status = "Unpaid"

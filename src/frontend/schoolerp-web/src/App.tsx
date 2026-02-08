@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
+import Dashboard from './pages/Dashboard';
 import Layout from './components/Layout';
 import StudentsList from './pages/StudentsList';
 import CreateStudent from './pages/CreateStudent';
@@ -52,7 +53,12 @@ const App: React.FC = () => {
 
                     <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                         <Route index element={<Navigate to="/dashboard" />} />
-                        <Route path="dashboard" element={<h2>Dashboard (Coming Soon)</h2>} />
+                        import Dashboard from './pages/Dashboard';
+
+                        // ... (other imports)
+
+                        // Inside App component
+                        <Route path="dashboard" element={<Dashboard />} />
 
                         {/* Students Module */}
                         <Route path="students" element={<StudentsList />} />

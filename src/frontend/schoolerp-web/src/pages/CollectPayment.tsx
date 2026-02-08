@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Search, CreditCard, Receipt, CheckCircle, FileText } from 'lucide-react';
 import api from '../services/api';
 import type { InvoiceDto, CreatePaymentDto } from '../types';
 
@@ -66,7 +67,7 @@ const CollectPayment: React.FC = () => {
         try {
             const response = await api.post('/finance/payments', paymentData);
             alert(`Payment successful!\nReceipt: ${response.data.receiptNumber}`);
-            navigate('/invoices');
+            navigate('/invoices'); // Or refresh current view
         } catch (error: any) {
             console.error('Payment failed:', error);
             const errorMsg = error.response?.data?.message || 'Payment failed. Check console.';
@@ -75,169 +76,168 @@ const CollectPayment: React.FC = () => {
     };
 
     return (
-        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem' }}>
-            <h2>Collect Payment</h2>
+        <div className="space-y-6">
+            <h2 className="text-2xl font-serif font-bold text-dark">Fees Collection</h2>
 
-            {/* Search Section */}
-            <div style={{
-                backgroundColor: 'white',
-                padding: '1.5rem',
-                borderRadius: '8px',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                marginBottom: '1.5rem'
-            }}>
-                <h3>Find Invoice</h3>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <input
-                        type="text"
-                        placeholder="Search by Student ID, Name, or Invoice Number..."
-                        value={studentSearch}
-                        onChange={(e) => setStudentSearch(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                        style={{ flex: 1, padding: '0.5rem' }}
-                    />
-                    <button
-                        onClick={handleSearch}
-                        disabled={loading}
-                        style={{ padding: '0.5rem 1rem', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                    >
-                        {loading ? 'Searching...' : 'Search'}
-                    </button>
-                </div>
-
-                {/* Invoice List */}
-                {invoices.length > 0 && (
-                    <table style={{ width: '100%', marginTop: '1rem', borderCollapse: 'collapse' }}>
-                        <thead>
-                            <tr style={{ backgroundColor: '#f8f9fa' }}>
-                                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>Invoice #</th>
-                                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>Student</th>
-                                <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '2px solid #dee2e6' }}>Total</th>
-                                <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '2px solid #dee2e6' }}>Balance</th>
-                                <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '2px solid #dee2e6' }}>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {invoices.map(inv => (
-                                <tr key={inv.invoiceId} style={{ borderBottom: '1px solid #dee2e6' }}>
-                                    <td style={{ padding: '0.75rem' }}>{inv.invoiceNumber}</td>
-                                    <td style={{ padding: '0.75rem' }}>{inv.studentName}</td>
-                                    <td style={{ padding: '0.75rem', textAlign: 'right' }}>${inv.totalAmount.toFixed(2)}</td>
-                                    <td style={{ padding: '0.75rem', textAlign: 'right', color: inv.balance > 0 ? 'red' : 'green' }}>
-                                        ${inv.balance.toFixed(2)}
-                                    </td>
-                                    <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                                        <button
-                                            onClick={() => selectInvoice(inv)}
-                                            style={{ padding: '0.25rem 0.75rem', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                                        >
-                                            Select
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
-            </div>
-
-            {/* Payment Form */}
-            {selectedInvoice && (
-                <div style={{
-                    backgroundColor: 'white',
-                    padding: '1.5rem',
-                    borderRadius: '8px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-                }}>
-                    <h3>Payment Details</h3>
-                    <div style={{ backgroundColor: '#e8f4fd', padding: '1rem', borderRadius: '4px', marginBottom: '1rem' }}>
-                        <p><strong>Invoice:</strong> {selectedInvoice.invoiceNumber}</p>
-                        <p><strong>Student:</strong> {selectedInvoice.studentName}</p>
-                        <p><strong>Total Amount:</strong> ${selectedInvoice.totalAmount.toFixed(2)}</p>
-                        <p><strong>Already Paid:</strong> ${selectedInvoice.paidAmount.toFixed(2)}</p>
-                        <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'red' }}>
-                            <strong>Balance Due:</strong> ${selectedInvoice.balance.toFixed(2)}
-                        </p>
-                    </div>
-
-                    <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                            <div>
-                                <label>Payment Amount *</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0.01"
-                                    max={selectedInvoice.balance}
-                                    value={paymentData.amount}
-                                    onChange={(e) => setPaymentData({ ...paymentData, amount: parseFloat(e.target.value) || 0 })}
-                                    required
-                                    style={{ width: '100%', padding: '0.5rem' }}
-                                />
-                            </div>
-                            <div>
-                                <label>Payment Method *</label>
-                                <select
-                                    value={paymentData.paymentMethod}
-                                    onChange={(e) => setPaymentData({ ...paymentData, paymentMethod: e.target.value })}
-                                    required
-                                    style={{ width: '100%', padding: '0.5rem' }}
-                                >
-                                    <option value="Cash">Cash</option>
-                                    <option value="BankTransfer">Bank Transfer</option>
-                                    <option value="KHQR">KHQR</option>
-                                    <option value="Cheque">Cheque</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        {paymentData.paymentMethod !== 'Cash' && (
-                            <div>
-                                <label>Reference Number</label>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left Column: Search & Selection */}
+                <div className="space-y-6">
+                    {/* Search Card */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                            <Search size={20} className="text-primary" />
+                            Find Student / Invoice
+                        </h3>
+                        <div className="flex gap-2">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                 <input
                                     type="text"
-                                    placeholder="Transaction ID / Cheque Number"
-                                    value={paymentData.referenceNumber || ''}
-                                    onChange={(e) => setPaymentData({ ...paymentData, referenceNumber: e.target.value })}
-                                    style={{ width: '100%', padding: '0.5rem' }}
+                                    placeholder="Search by ID, Name, Invoice #..."
+                                    value={studentSearch}
+                                    onChange={(e) => setStudentSearch(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                 />
                             </div>
-                        )}
-
-                        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                             <button
-                                type="submit"
-                                style={{
-                                    padding: '0.75rem 2rem',
-                                    backgroundColor: '#28a745',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    fontSize: '1.1rem',
-                                    fontWeight: 'bold'
-                                }}
+                                onClick={handleSearch}
+                                disabled={loading}
+                                className="px-6 py-2.5 bg-slate-800 text-white rounded-lg font-medium hover:bg-slate-900 transition-colors disabled:opacity-70"
                             >
-                                ✓ Record Payment
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setSelectedInvoice(null)}
-                                style={{
-                                    padding: '0.75rem 1.5rem',
-                                    backgroundColor: '#6c757d',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                Cancel
+                                {loading ? '...' : 'Search'}
                             </button>
                         </div>
-                    </form>
+                    </div>
+
+                    {/* Results List */}
+                    {invoices.length > 0 && (
+                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div className="p-4 border-b border-slate-100 bg-slate-50">
+                                <h4 className="font-semibold text-sm text-slate-500 uppercase">Pending Invoices</h4>
+                            </div>
+                            <div className="divide-y divide-slate-100">
+                                {invoices.map(inv => (
+                                    <div
+                                        key={inv.invoiceId}
+                                        onClick={() => selectInvoice(inv)}
+                                        className={`p-4 cursor-pointer transition-all hover:bg-slate-50 flex justify-between items-center ${selectedInvoice?.invoiceId === inv.invoiceId ? 'bg-blue-50 border-l-4 border-primary' : ''}`}
+                                    >
+                                        <div>
+                                            <div className="font-bold text-dark">{inv.studentName}</div>
+                                            <div className="text-sm text-slate-500 flex items-center gap-2">
+                                                <FileText size={14} />
+                                                #{inv.invoiceNumber}
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-sm text-slate-400">Balance</div>
+                                            <div className="font-bold text-danger">${inv.balance.toFixed(2)}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
-            )}
+
+                {/* Right Column: Payment Form */}
+                <div className="space-y-6">
+                    {selectedInvoice ? (
+                        <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden sticky top-6">
+                            <div className="bg-primary/5 p-6 border-b border-primary/10">
+                                <h3 className="font-bold text-lg text-primary flex items-center gap-2">
+                                    <Receipt size={20} />
+                                    Payment Details
+                                </h3>
+                            </div>
+
+                            <div className="p-6 space-y-6">
+                                {/* Invoice Summary */}
+                                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-2">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-slate-500">Invoice Amount</span>
+                                        <span className="font-medium">${selectedInvoice.totalAmount.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-slate-500">Already Paid</span>
+                                        <span className="font-medium text-success">-${selectedInvoice.paidAmount.toFixed(2)}</span>
+                                    </div>
+                                    <div className="border-t border-slate-200 my-2 pt-2 flex justify-between items-center">
+                                        <span className="font-bold text-slate-700">Balance Due</span>
+                                        <span className="font-bold text-xl text-danger">${selectedInvoice.balance.toFixed(2)}</span>
+                                    </div>
+                                </div>
+
+                                <form onSubmit={handleSubmit} className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">Amount to Pay</label>
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0.01"
+                                                max={selectedInvoice.balance}
+                                                value={paymentData.amount}
+                                                onChange={(e) => setPaymentData({ ...paymentData, amount: parseFloat(e.target.value) || 0 })}
+                                                className="w-full pl-8 pr-4 py-3 rounded-lg border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none font-bold text-lg"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">Payment Method</label>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {['Cash', 'BankTransfer', 'KHQR', 'Cheque'].map(method => (
+                                                <button
+                                                    key={method}
+                                                    type="button"
+                                                    onClick={() => setPaymentData({ ...paymentData, paymentMethod: method })}
+                                                    className={`py-2 px-3 rounded-lg text-sm font-medium border transition-all ${paymentData.paymentMethod === method
+                                                        ? 'bg-primary text-white border-primary shadow-md'
+                                                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                                                        }`}
+                                                >
+                                                    {method === 'BankTransfer' ? 'Bank Transfer' : method}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {paymentData.paymentMethod !== 'Cash' && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Reference Number</label>
+                                            <input
+                                                type="text"
+                                                placeholder="Transaction ID / Cheque No."
+                                                value={paymentData.referenceNumber || ''}
+                                                onChange={(e) => setPaymentData({ ...paymentData, referenceNumber: e.target.value })}
+                                                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                                            />
+                                        </div>
+                                    )}
+
+                                    <button
+                                        type="submit"
+                                        className="w-full bg-success hover:bg-green-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5"
+                                    >
+                                        <CheckCircle size={20} />
+                                        Record Payment
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl p-12 flex flex-col items-center justify-center text-slate-400">
+                            <CreditCard size={48} className="mb-4 opacity-50" />
+                            <p className="text-lg font-medium">No invoice selected</p>
+                            <p className="text-sm">Search and select an invoice to proceed with payment.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };

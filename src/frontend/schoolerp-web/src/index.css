@@ -1,23 +1,36 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@700;900&family=Outfit:wght@300;400;500;600;700&display=swap');
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+@import "tailwindcss";
+
+@layer base {
+    body {
+        @apply bg-light text-dark font-sans antialiased;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply font-serif font-bold;
+    }
 }
 
-body {
-    font-family: 'Inter', sans-serif;
-    color: #1e293b;
-    background-color: #f8fafc;
-}
+@layer components {
+    .btn {
+        @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200 ease-in-out;
+    }
 
-button {
-    font-family: inherit;
-}
+    .btn-primary {
+        @apply bg-primary text-white hover:bg-primary-dark shadow-md hover:shadow-lg hover:-translate-y-0.5;
+    }
 
-input, select {
-    font-family: inherit;
-    border: 1px solid #cbd5e1;
-    border-radius: 4px;
+    .card {
+        @apply bg-white rounded-xl shadow-sm border border-slate-200 p-6;
+    }
+
+    .input-field {
+        @apply w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all;
+    }
 }

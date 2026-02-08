@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import api from '../services/api';
 import type { InvoiceDto } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { FileText, DollarSign } from 'lucide-react';
+import { FileText, DollarSign, Plus, Download } from 'lucide-react';
 
 const InvoiceList: React.FC = () => {
     const { id } = useParams<{ id: string }>(); // Student ID
@@ -82,23 +82,16 @@ const InvoiceList: React.FC = () => {
     // Handle case where accessed via /invoices directly
     if (!id) {
         return (
-            <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center', padding: '3rem' }}>
-                <h2>Invoices</h2>
-                <div style={{ padding: '2rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                    <FileText size={48} color="#94a3b8" style={{ marginBottom: '1rem' }} />
-                    <p style={{ color: '#475569', marginBottom: '1.5rem', fontSize: '1.1rem' }}>
-                        Please select a student to view or manage their invoices.
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="text-center max-w-md p-8 bg-white rounded-2xl shadow-lg border border-slate-100">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+                        <FileText size={32} />
+                    </div>
+                    <h2 className="text-xl font-bold text-dark mb-2">No Student Selected</h2>
+                    <p className="text-slate-500 mb-6">
+                        Please select a student from the Students list to manage their invoices.
                     </p>
-                    <a href="/students" style={{
-                        display: 'inline-block',
-                        backgroundColor: '#007BFF',
-                        color: 'white',
-                        padding: '0.75rem 1.5rem',
-                        borderRadius: '4px',
-                        textDecoration: 'none',
-                        fontWeight: 'bold',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                    }}>
+                    <a href="/students" className="inline-flex items-center justify-center px-6 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary-dark transition-all">
                         Go to Students List
                     </a>
                 </div>
@@ -107,68 +100,89 @@ const InvoiceList: React.FC = () => {
     }
 
     return (
-        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <h2>Invoices for {studentName || 'Student'}</h2>
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 className="text-2xl font-serif font-bold text-dark">Invoices</h2>
+                    <p className="text-slate-500 text-sm">Managing invoices for {studentName || 'Student'}</p>
+                </div>
                 <button
                     onClick={handleCreateInvoice}
-                    style={{ backgroundColor: '#007BFF', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                 >
-                    <FileText size={16} /> Generate Invoice
+                    <Plus size={18} />
+                    <span className="text-sm font-medium">Generate Invoice</span>
                 </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                {loading ? <p>Loading...</p> : invoices.map(inv => (
-                    <div key={inv.invoiceId} style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderLeft: `4px solid ${inv.status === 'Paid' ? '#166534' : inv.status === 'Partial' ? '#eab308' : '#dc2626'}` }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <div className="space-y-4">
+                {loading ? (
+                    <div className="bg-white p-8 rounded-xl text-center text-slate-500">Loading invoices...</div>
+                ) : invoices.map(inv => (
+                    <div key={inv.invoiceId} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden transition-all hover:shadow-md">
+                        {/* Header */}
+                        <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between sm:items-start gap-4">
                             <div>
-                                <h3 style={{ margin: 0 }}>{inv.invoiceNumber}</h3>
-                                <p style={{ color: '#64748b', fontSize: '0.9rem' }}>
-                                    Isued: {new Date(inv.issueDate).toLocaleDateString()} &middot; Due: {new Date(inv.dueDate).toLocaleDateString()}
-                                </p>
+                                <div className="flex items-center gap-3 mb-1">
+                                    <h3 className="text-lg font-bold text-dark">#{inv.invoiceNumber}</h3>
+                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide border ${inv.status === 'Paid' ? 'bg-success/10 text-success border-success/20' :
+                                            inv.status === 'Partial' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                                                'bg-danger/10 text-danger border-danger/20'
+                                        }`}>
+                                        {inv.status}
+                                    </span>
+                                </div>
+                                <div className="text-sm text-slate-500 flex gap-4">
+                                    <span>Issued: {new Date(inv.issueDate).toLocaleDateString()}</span>
+                                    <span>Due: {new Date(inv.dueDate).toLocaleDateString()}</span>
+                                </div>
                             </div>
-                            <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>${inv.totalAmount.toFixed(2)}</div>
-                                <span style={{
-                                    padding: '0.25rem 0.5rem',
-                                    borderRadius: '999px',
-                                    fontSize: '0.8rem',
-                                    backgroundColor: inv.status === 'Paid' ? '#dcfce7' : inv.status === 'Partial' ? '#fef9c3' : '#fee2e2',
-                                    color: inv.status === 'Paid' ? '#166534' : inv.status === 'Partial' ? '#854d0e' : '#991b1b'
-                                }}>
-                                    {inv.status}
-                                </span>
+                            <div className="text-right">
+                                <div className="text-2xl font-bold text-dark">${inv.totalAmount.toFixed(2)}</div>
+                                <div className="text-sm text-slate-400">Total Amount</div>
                             </div>
                         </div>
 
-                        <div style={{ backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '4px', marginBottom: '1rem' }}>
-                            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                        {/* Items */}
+                        <div className="bg-slate-50/50 p-6">
+                            <ul className="space-y-2">
                                 {inv.items.map(item => (
-                                    <li key={item.invoiceItemId} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
+                                    <li key={item.invoiceItemId} className="flex justify-between text-sm text-slate-600">
                                         <span>{item.description}</span>
-                                        <span>${item.amount.toFixed(2)}</span>
+                                        <span className="font-medium">${item.amount.toFixed(2)}</span>
                                     </li>
                                 ))}
                             </ul>
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
-                            <div style={{ fontSize: '0.9rem' }}>
-                                <strong>Paid:</strong> ${inv.paidAmount.toFixed(2)} &middot; <strong>Balance:</strong> ${inv.balance.toFixed(2)}
+                        {/* Footer / Actions */}
+                        <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
+                            <div className="text-sm">
+                                <span className="text-slate-500 mr-4">Paid: <strong className="text-success">${inv.paidAmount.toFixed(2)}</strong></span>
+                                <span className="text-slate-500">Balance: <strong className="text-danger">${inv.balance.toFixed(2)}</strong></span>
                             </div>
-                            {inv.balance > 0 && (
-                                <button
-                                    onClick={() => handlePayment(inv.invoiceId, inv.balance)}
-                                    style={{ backgroundColor: '#16a34a', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                                >
-                                    <DollarSign size={16} /> Pay Now
+                            <div className="flex gap-2">
+                                <button className="p-2 text-slate-400 hover:text-dark hover:bg-white rounded-lg transition-colors border border-transparent hover:border-slate-200">
+                                    <Download size={18} />
                                 </button>
-                            )}
+                                {inv.balance > 0 && (
+                                    <button
+                                        onClick={() => handlePayment(inv.invoiceId, inv.balance)}
+                                        className="flex items-center gap-2 px-4 py-2 bg-success hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors"
+                                    >
+                                        <DollarSign size={16} />
+                                        Pay
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 ))}
-                {!loading && invoices.length === 0 && <p style={{ textAlign: 'center', color: '#64748b' }}>No invoices found for this student.</p>}
+                {!loading && invoices.length === 0 && (
+                    <div className="bg-white p-12 rounded-xl text-center border-2 border-dashed border-slate-200">
+                        <p className="text-slate-400">No invoices found for this student.</p>
+                    </div>
+                )}
             </div>
         </div>
     );

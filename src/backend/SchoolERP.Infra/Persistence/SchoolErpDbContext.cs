@@ -231,6 +231,22 @@ namespace SchoolERP.Infra.Persistence
                     .HasForeignKey(d => d.InvoiceId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
+
+            // VoidRequest Configuration
+            modelBuilder.Entity<VoidRequest>(entity =>
+            {
+                entity.HasKey(e => e.VoidRequestId);
+                entity.Property(e => e.Reason).HasMaxLength(500).IsRequired();
+                entity.Property(e => e.RequestedBy).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Status).HasMaxLength(20).IsRequired();
+                entity.Property(e => e.ApprovedBy).HasMaxLength(100);
+                entity.Property(e => e.RejectionReason).HasMaxLength(500);
+
+                entity.HasOne(d => d.Payment)
+                    .WithMany()
+                    .HasForeignKey(d => d.PaymentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
         }
     }
 }
