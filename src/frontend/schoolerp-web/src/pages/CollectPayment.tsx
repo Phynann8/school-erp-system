@@ -26,9 +26,11 @@ const CollectPayment: React.FC = () => {
         setLoading(true);
         try {
             const response = await api.get('/finance/invoices', {
-                params: { q: studentSearch, status: 'Unpaid,PartiallyPaid' }
+                params: { q: studentSearch, status: 'Unpaid,Partial' }
             });
-            setInvoices(response.data.data || []);
+            const payload = response.data;
+            const invoiceList = Array.isArray(payload) ? payload : payload?.data || [];
+            setInvoices(invoiceList);
         } catch (error) {
             console.error('Search failed:', error);
             alert('Failed to search invoices');

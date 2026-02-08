@@ -1,6 +1,7 @@
 export interface UserProfile {
     userId: number;
     fullName: string;
+    email?: string;
     roles: string[];
     campusAccess: {
         campusId: number;

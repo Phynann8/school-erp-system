@@ -34,6 +34,95 @@ namespace SchoolERP.Api.Controllers
             _db = db;
         }
 
+        [HttpGet("invoices")]
+        public async Task<ActionResult<object>> SearchInvoices(
+            [FromQuery] string? q,
+            [FromQuery] string? status,
+            [FromQuery] int? campusId,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20)
+        {
+            var effectiveCampusId = campusId ?? _currentUserService.CampusId;
+
+            if (!effectiveCampusId.HasValue)
+            {
+                return BadRequest("Campus context is required.");
+            }
+
+            if (!_currentUserService.HasAccessToCampus(effectiveCampusId.Value))
+            {
+                return Forbid();
+            }
+
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 20;
+
+            var query = _db.Invoices
+                .AsNoTracking()
+                .Include(i => i.Student)
+                .Include(i => i.InvoiceItems)
+                .Where(i => i.Student.CampusId == effectiveCampusId.Value)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                var search = q.Trim();
+                query = query.Where(i =>
+                    i.InvoiceNumber.Contains(search) ||
+                    i.Student.StudentCode.Contains(search) ||
+                    (i.Student.EnglishName != null && i.Student.EnglishName.Contains(search)) ||
+                    (i.Student.KhmerName != null && i.Student.KhmerName.Contains(search)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                var statusFilters = status
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                if (statusFilters.Count > 0)
+                {
+                    query = query.Where(i => statusFilters.Contains(i.Status));
+                }
+            }
+
+            var total = await query.CountAsync();
+
+            var invoices = await query
+                .OrderByDescending(i => i.IssueDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var dtos = invoices.Select(i => new InvoiceDto
+            {
+                InvoiceId = i.InvoiceId,
+                StudentId = i.StudentId,
+                StudentName = i.Student.EnglishName ?? i.Student.KhmerName ?? i.Student.StudentCode,
+                InvoiceNumber = i.InvoiceNumber,
+                IssueDate = i.IssueDate,
+                DueDate = i.DueDate,
+                TotalAmount = i.TotalAmount,
+                PaidAmount = i.PaidAmount,
+                Balance = i.Balance,
+                Status = i.Status,
+                Items = i.InvoiceItems.Select(item => new InvoiceItemDto
+                {
+                    InvoiceItemId = item.InvoiceItemId,
+                    Description = item.Description,
+                    Amount = item.Amount
+                }).ToList()
+            }).ToList();
+
+            return Ok(new
+            {
+                data = dtos,
+                total,
+                page,
+                pageSize
+            });
+        }
+
         [HttpGet("invoices/student/{studentId}")]
         public async Task<ActionResult<IEnumerable<InvoiceDto>>> GetStudentInvoices(int studentId)
         {
